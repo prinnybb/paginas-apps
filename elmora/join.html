@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Join the family — Elmora</title>
+<meta name="robots" content="noindex">
+<meta property="og:title" content="Join the family on Elmora">
+<meta property="og:description" content="Share medication reminders, doses and the emergency card with the whole family.">
+<meta property="og:image" content="icon.png">
+<link rel="stylesheet" href="style.css">
+<style>
+  .center { text-align: center; }
+  .code { font: 700 34px/1.2 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: 6px; margin: 6px 0 2px; }
+  .btn { display: block; box-sizing: border-box; width: 100%; padding: 15px 18px; border-radius: 14px; border: 0; font: 600 17px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; text-align: center; text-decoration: none; cursor: pointer; margin: 10px 0; }
+  .btn.primary { background: var(--sage); color: #fff; }
+  .btn.secondary { background: var(--sage-soft); color: var(--sage); }
+  .steps { padding-left: 22px; }
+  .muted { color: var(--muted); font-size: 15px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div style="display:flex;align-items:center;gap:14px"><img src="icon.png" alt=""><a href="index.html">Elmora</a></div>
+</div></header>
+<main class="wrap">
+  <h1 id="title">You're invited to join the family</h1>
+  <p id="lead">Someone in your family is using Elmora to share medication reminders, doses and the emergency card.</p>
+
+  <div class="card center" id="codeCard" hidden>
+    <div class="muted" id="codeLabel">Your invite code</div>
+    <div class="code" id="code"></div>
+    <button class="btn secondary" id="copy" type="button">Copy code</button>
+  </div>
+
+  <a class="btn primary" id="open" href="#">Open in Elmora</a>
+  <a class="btn secondary" id="store" href="#" hidden>Get Elmora on the App Store</a>
+  <a class="btn secondary" id="play" href="#" hidden>Get Elmora on Google Play</a>
+  <p class="muted center" id="soon" hidden>Elmora is coming soon to the App Store and Google Play.</p>
+
+  <h2 id="howTitle">Don't have the app yet?</h2>
+  <ol class="steps">
+    <li id="s1">Install Elmora from the App Store (iPhone) or Google Play (Android).</li>
+    <li id="s2">Come back to this message and tap the link again, or enter the code above.</li>
+  </ol>
+  <p class="note" id="bad" hidden>This invite link looks incomplete. Ask the person who invited you to send it again.</p>
+</main>
+<footer class="wrap">© 2026 LCM Capstone Co. · <a href="privacy.html">Privacy</a> · <a href="support.html">Support</a></footer>
+
+<script>
+  // Fill these in once the apps exist in the stores.
+  // App Store Connect shows the iPhone link, e.g. "https://apps.apple.com/app/id1234567890".
+  var APP_STORE_URL = "";
+  // Google Play: once the app is published, "https://play.google.com/store/apps/details?id=com.elmora.app".
+  var PLAY_STORE_URL = "";
+  var ANDROID_PACKAGE = "com.elmora.app";
+
+  var ua = navigator.userAgent || "";
+  var isAndroid = /Android/i.test(ua);
+  var isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+
+  var es = (navigator.language || "").toLowerCase().indexOf("es") === 0;
+  var text = es ? {
+    title: "Te invitaron a unirte a la familia",
+    lead: "Alguien de tu familia usa Elmora para compartir recordatorios de medicinas, tomas y la ficha de emergencia.",
+    codeLabel: "Tu código de invitación", copy: "Copiar código", copied: "¡Copiado!",
+    open: "Abrir en Elmora", store: "Descargar Elmora en la App Store", play: "Descargar Elmora en Google Play",
+    soon: "Elmora llegará pronto a la App Store y a Google Play.",
+    howTitle: "¿Todavía no tienes la app?",
+    s1: "Instala Elmora desde la App Store (iPhone) o Google Play (Android).",
+    s2: "Vuelve a este mensaje y toca el enlace otra vez, o escribe el código de arriba.",
+    bad: "Este enlace de invitación parece incompleto. Pide a quien te invitó que te lo mande de nuevo."
+  } : null;
+  if (es) {
+    document.documentElement.lang = "es";
+    for (var k in text) { var el = document.getElementById(k); if (el) el.textContent = text[k]; }
+  }
+
+  // Only letters and numbers, like the codes the app creates (6 characters; older ones have 8).
+  var raw = new URLSearchParams(location.search).get("code") || "";
+  var code = raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+  var valid = code.length === 6 || code.length === 8;
+
+  var openBtn = document.getElementById("open");
+  if (valid) {
+    document.getElementById("code").textContent = code;
+    document.getElementById("codeCard").hidden = false;
+    // Android: un "intent" abre la app si está instalada; si no, Chrome va a Google Play (cuando exista el enlace).
+    openBtn.href = isAndroid
+      ? "intent://join?code=" + code + "#Intent;scheme=elmora;package=" + ANDROID_PACKAGE +
+        (PLAY_STORE_URL ? ";S.browser_fallback_url=" + encodeURIComponent(PLAY_STORE_URL) : "") + ";end"
+      : "elmora://join?code=" + code;
+  } else {
+    openBtn.href = "elmora://";
+    document.getElementById("bad").hidden = false;
+  }
+
+  // Each phone sees its own store; a computer sees both.
+  var shown = false;
+  if (APP_STORE_URL && !isAndroid) {
+    var store = document.getElementById("store");
+    store.href = APP_STORE_URL; store.hidden = false; shown = true;
+  }
+  if (PLAY_STORE_URL && !isIOS) {
+    var play = document.getElementById("play");
+    play.href = PLAY_STORE_URL; play.hidden = false; shown = true;
+  }
+  if (!shown) document.getElementById("soon").hidden = false;
+
+  document.getElementById("copy").addEventListener("click", function () {
+    var btn = this;
+    var done = function () { btn.textContent = es ? text.copied : "Copied!"; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(done, function () {});
+    } else {
+      var area = document.createElement("textarea");
+      area.value = code; document.body.appendChild(area); area.select();
+      try { document.execCommand("copy"); done(); } catch (e) {}
+      document.body.removeChild(area);
+    }
+  });
+</script>
+</body>
+</html>
